@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1200" fill="none">
+  <!-- Affiche L'Apprenti Barber : fond transparent, tons clairs -->
+  <circle cx="500" cy="600" r="460" stroke="#FFFFFF" stroke-width="14"/>
+  <circle cx="500" cy="600" r="425" stroke="#FF6A00" stroke-width="4" opacity="0.8"/>
+
+  <!-- Couronne -->
+  <path d="M425 325 L408 238 L455 275 L500 195 L545 275 L592 238 L575 325 Z" fill="#FFFFFF"/>
+  <rect x="418" y="340" width="164" height="14" fill="#FFFFFF"/>
+
+  <!-- B -->
+  <g transform="translate(340 385) scale(1.55)" fill="#FFFFFF" fill-rule="evenodd">
+    <path d="M0 0 H110 C170 0 200 30 200 80 C200 115 185 135 160 145 C190 155 205 180 205 220 C205 275 170 300 110 300 H0 Z
+             M50 40 V125 H100 C125 125 140 112 140 82 C140 52 125 40 100 40 Z
+             M50 165 V260 H105 C135 260 150 245 150 212 C150 180 135 165 105 165 Z"/>
+  </g>
+  <!-- Apostrophe -->
+  <path d="M690 392 L735 392 L705 485 L678 485 Z" fill="#FFFFFF"/>
+
+  <!-- BARBER -->
+  <text x="500" y="935" text-anchor="middle" fill="#FFFFFF"
+        font-family="'Bebas Neue', Impact, 'Arial Narrow', sans-serif"
+        font-size="150" letter-spacing="14">BARBER</text>
+
+  <!-- L'APPRENTI -->
+  <line x1="300" y1="1000" x2="380" y2="1000" stroke="#FF6A00" stroke-width="5"/>
+  <line x1="620" y1="1000" x2="700" y2="1000" stroke="#FF6A00" stroke-width="5"/>
+  <text x="500" y="1014" text-anchor="middle" fill="#FF6A00"
+        font-family="'Bebas Neue', Impact, 'Arial Narrow', sans-serif"
+        font-size="44" letter-spacing="14">L’APPRENTI</text>
+</svg>
