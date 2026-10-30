@@ -31,17 +31,14 @@ input,select{width:100%;padding:14px;background:var(--card);color:var(--tx);bord
 .bk a{color:var(--or)}.bk button{background:none;border:1px solid var(--ln);color:var(--mut);border-radius:4px;padding:8px 12px}
 footer{text-align:center;color:var(--mut);padding:32px 20px;border-top:1px solid var(--ln);font-size:14px}
 .hero { position: relative; overflow: hidden; }
-
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url("affiche-bg.svg") center 60% / 130% auto no-repeat;
-  opacity: 0.10;
-  pointer-events: none;
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: #0a0a0a url("affiche-noir.svg") center 60% / 130% auto no-repeat !important;
 }
 
 .hero > * { position: relative; z-index: 1; }
+
 </style>
 </head>
 <body>
