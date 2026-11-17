@@ -27,8 +27,13 @@ input,select{width:100%;padding:14px;background:var(--card);color:var(--tx);bord
 .slot.sel{background:var(--or);color:#000;border-color:var(--or)}.slot:disabled{opacity:.3;text-decoration:line-through}
 .msg{margin-top:16px;padding:14px;border-radius:4px;background:var(--card);border-left:4px solid var(--or)}
 .hide{display:none}
-.bk{background:var(--card);border:1px solid var(--ln);border-radius:4px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.bk{background:var(--card);border:1px solid var(--ln);border-radius:4px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .bk a{color:var(--or)}.bk button{background:none;border:1px solid var(--ln);color:var(--mut);border-radius:4px;padding:8px 12px}
+.loy{margin-top:10px;padding:10px;border:1px dashed var(--or);border-radius:4px;font-size:14px}
+.dots{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.dot{width:16px;height:16px;border-radius:50%;border:1px solid var(--or)}.dot.on{background:var(--or)}
+.gift{color:var(--or);font-weight:600}
+.send{display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
 footer{text-align:center;color:var(--mut);padding:32px 20px;border-top:1px solid var(--ln);font-size:14px}
 .hero { position: relative; overflow: hidden; }
 .hero {
@@ -135,10 +140,26 @@ $("go").onclick=async()=>{
   }catch(e){say("Réservation impossible pour le moment. Écrivez-nous sur WhatsApp.")}
   $("go").disabled=false;
 };
+
+/* Fidélité : 10 coupes payées, la 11e est offerte (le compteur repart ensuite).
+   Calculé uniquement ici, dans l'espace admin, à partir du numéro de téléphone. */
+const normTel=t=>{let n=String(t).replace(/\D/g,"");if(n.startsWith("0"))n="262"+n.slice(1);return n};
+function loyalty(x){
+  const p=x._n%11,free=p===0,filled=free?10:p;
+  const dots=Array.from({length:10},(_,i)=>`<span class="dot ${i<filled?"on":""}"></span>`).join("");
+  let h=`<div class="loy"><b>Carte fidélité · coupe n°${x._n}</b><div class="dots">${dots}</div>`;
+  h+=free?`<span class="gift">🎁 Cette coupe est OFFERTE</span>`:`${p}/10 · ${p===10?"la prochaine est offerte 🎁":(10-p)+" avant la coupe offerte"}`;
+  if(p===10){
+    const txt=encodeURIComponent(`Bonjour ${x.name}, merci pour votre fidélité chez L’APPRENTI BARBER ! Vous avez fait 10 coupes : votre 11ème est OFFERTE 🎁. Réservez quand vous voulez, je me déplace chez vous.`);
+    h+=`<div class="send"><a href="sms:+${x._k}?body=${txt}">📱 Envoyer le SMS</a><a href="https://wa.me/${x._k}?text=${txt}" target="_blank" rel="noopener">💬 WhatsApp</a></div>`;
+  }
+  return h+"</div>";
+}
 async function showBookings(){
   const r=await sb.from("bookings").select("*").order("slot_date").order("slot_time");
-  const rows=r.data||[];
-  $("bks").innerHTML=rows.length?rows.map(x=>`<div class="bk"><div><b>${x.slot_date} · ${x.slot_time}</b><br>${esc(x.name)} · ${esc(x.service)} (${x.price}€)<br>📍 ${esc(x.addr)}, ${esc(x.commune)}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a></div><button data-id="${x.id}">Annuler</button></div>`).join(""):'<p style="color:var(--mut)">Aucun rendez-vous pour le moment.</p>';
+  const rows=r.data||[],cnt={};
+  rows.forEach(x=>{x._k=normTel(x.tel);cnt[x._k]=(cnt[x._k]||0)+1;x._n=cnt[x._k]});
+  $("bks").innerHTML=rows.length?rows.map(x=>`<div class="bk"><div><b>${x.slot_date} · ${x.slot_time}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}</div><button data-id="${x.id}">Annuler</button></div>`).join(""):'<p style="color:var(--mut)">Aucun rendez-vous pour le moment.</p>';
 }
 async function refreshAuth(){
   const {data}=await sb.auth.getSession();
