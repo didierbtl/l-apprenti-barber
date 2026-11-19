@@ -200,6 +200,13 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 .pick button{background:none;border:0;font-size:36px;line-height:1;color:#d9d2bd;cursor:pointer;padding:2px}
 .pick button.on{color:#c9a45c}
 #avis .form .msg{background:#fbf6e8;border-color:#e6d6a6;color:var(--ink)}
+.stg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stc{background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stc small{display:block;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.stc b{display:block;font-family:'Playfair Display',serif;font-size:26px;color:var(--gold2);margin:4px 0 2px}
+.stc span{font-size:13px;color:var(--mut)}
+.stl{font-size:14px;color:var(--mut);margin:0 0 10px}
+.stl b{color:var(--tx)}
 .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:inline-flex}
 @media(min-width:760px){.fab{display:none}}
 </style>
@@ -393,6 +400,10 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
         <p class="hint">Touche ✕ pour retirer un jour. N’oublie pas d’appuyer sur Enregistrer.</p>
         <p><button class="btn sm" id="s-save">Enregistrer</button></p>
         <div class="msg hide" id="s-msg"></div>
+      </details>
+
+      <details class="set"><summary>📊 Statistiques</summary>
+        <div id="st-body" style="margin-top:10px"></div>
       </details>
 
       <details class="set"><summary id="rv-sumy">⭐ Avis clients</summary>
@@ -619,7 +630,38 @@ async function showBookings(){
   const rows=r.data||[],cnt={};
   rows.forEach(x=>{x._k=normTel(x.tel);cnt[x._k]=(cnt[x._k]||0)+1;x._n=cnt[x._k]});
   ROWS=rows;
-  renderBookings(rows);
+  renderBookings(rows);renderStats();
+}
+/* Statistiques (calculées à partir des rendez-vous passés ; les coupes offertes comptent 0 €) */
+function renderStats(){
+  const box=$("st-body");
+  if(!ROWS.length){box.innerHTML='<p class="stl">Pas encore de rendez-vous.</p>';return}
+  const n=new Date(),today=iso(n),cm=today.slice(0,7),lm=iso(new Date(n.getFullYear(),n.getMonth()-1,1)).slice(0,7);
+  const val=x=>x._n%11===0?0:(Number(x.price)||0);
+  const sum=a=>a.reduce((t,x)=>t+val(x),0);
+  const done=ROWS.filter(x=>x.slot_date<=today),up=ROWS.filter(x=>x.slot_date>today);
+  const m1=done.filter(x=>x.slot_date.startsWith(cm)),m0=done.filter(x=>x.slot_date.startsWith(lm));
+  const paid=done.filter(x=>val(x)>0),free=done.length-paid.length;
+  const avg=paid.length?(sum(done)/paid.length).toFixed(1).replace(".",","):"0";
+  const pl=(k,w)=>k+" "+w+(k>1?"s":"");
+  const top=f=>{const c={};ROWS.forEach(x=>{const k=f(x);c[k]=(c[k]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])[0]};
+  const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+  const dj=top(x=>new Date(x.slot_date+"T12:00").getDay()),sv=top(x=>x.service),cm2=top(x=>x.commune);
+  const cl={};ROWS.forEach(x=>{const c=cl[x._k]||(cl[x._k]={name:x.name,n:0});c.n++;c.name=x.name});
+  const best=Object.values(cl).sort((a,b)=>b.n-a.n).slice(0,3);
+  const card=(l,b,sub)=>`<div class="stc"><small>${l}</small><b>${b}</b><span>${sub}</span></div>`;
+  box.innerHTML=`<div class="stg">`
+   +card("Ce mois-ci",sum(m1)+" €",pl(m1.length,"prestation")+" réalisée"+(m1.length>1?"s":""))
+   +card("Mois dernier",sum(m0)+" €",pl(m0.length,"prestation"))
+   +card("À venir",up.length,pl(up.length,"rendez-vous"))
+   +card("Total",sum(done)+" €",pl(done.length,"prestation")+" réalisée"+(done.length>1?"s":""))
+   +card("Panier moyen",avg+" €","par coupe payée")
+   +card("Coupes offertes",free,"depuis le début")
+   +`</div>`
+   +`<p class="stl">📅 Jour le plus chargé : <b>${days[dj[0]]}</b> (${dj[1]})</p>`
+   +`<p class="stl">✂️ Prestation la plus demandée : <b>${esc(sv[0])}</b> (${sv[1]})</p>`
+   +`<p class="stl">📍 Commune la plus fréquente : <b>${esc(cm2[0])}</b> (${cm2[1]})</p>`
+   +`<p class="stl">⭐ Meilleurs clients : `+best.map(c=>`<b>${esc(c.name)}</b> (${c.n})`).join(" · ")+`</p>`;
 }
 async function saveEdit(id,box){
   const msg=box.querySelector(".e-msg"),say2=m=>{msg.textContent=m;msg.classList.remove("hide")};
