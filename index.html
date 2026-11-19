@@ -180,6 +180,10 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--gold);backg
 .set summary::-webkit-details-marker{display:none}
 .set .hint{font-size:13px;color:var(--mut);margin:6px 0 0}
 .set .msg{margin-top:14px;font-size:14px;padding:12px 14px}
+.off{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.off span{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:999px;font-size:14px}
+.off button{background:none;border:0;color:#e07a7a;font-size:16px;cursor:pointer;padding:0}
+.closed{grid-column:1/-1;padding:16px;border-radius:12px;background:#fbf6e8;border:1px solid #e6d6a6;color:var(--ink);font-size:15px}
 
 footer{background:#070e1a;border-top:1px solid var(--line);padding:46px 20px calc(36px + env(safe-area-inset-bottom,0px));text-align:center;color:var(--mut);font-size:14px}
 footer .fb{font-family:'Playfair Display',serif;font-size:22px;color:var(--tx);margin-bottom:6px;letter-spacing:.06em}
@@ -351,6 +355,11 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
         <input id="s-mon" placeholder="08:00,09:00,10:00">
         <label>Créneaux du mardi au dimanche</label>
         <input id="s-other" placeholder="08:00,09:00,10:00">
+        <label>Jours de fermeture (congés, jours off)</label>
+        <input type="date" id="s-off">
+        <p><button class="btn o sm" id="s-add" type="button">+ Ajouter ce jour off</button></p>
+        <div class="off" id="s-offs"></div>
+        <p class="hint">Touche ✕ pour retirer un jour. N’oublie pas d’appuyer sur Enregistrer.</p>
         <p><button class="btn sm" id="s-save">Enregistrer</button></p>
         <div class="msg hide" id="s-msg"></div>
       </details>
@@ -371,7 +380,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
-const CONFIG={whatsapp:"262693946880",mon:["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"],other:["08:00","09:00","10:00","11:00","12:00","13:00","14:00"]};
+const CONFIG={whatsapp:"262693946880",mon:["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"],other:["08:00","09:00","10:00","11:00","12:00","13:00","14:00"],closed:[]};
 const sb=supabase.createClient("https://qhnekdidxanugehrcvim.supabase.co","sb_publishable_0KbtD8bo-k15AZ50LcduCQ_8QFHyLXX");
 const SERVICES=[["Coupe seule","Coupe propre et finitions nettes",8,30],["Coupe + barbe","Coupe et taille de barbe",12,45],["Coupe + barbe + sourcils","Le combo complet",13,50]];
 const COMMUNES=["Saint-Benoît (sans frais)","Bras-Panon (+4 à 8 €)","Sainte-Anne (+4 à 8 €)","Saint-André (+4 à 8 €)","Sainte-Suzanne (+4 à 8 €)"];
@@ -402,6 +411,7 @@ async function loadTaken(){
 }
 function draw(){
   const day=new Date(d.value+"T12:00").getDay();
+  if(CONFIG.closed.includes(d.value)){chosen=null;$("slots").innerHTML='<div class="closed">Fermé ce jour-là. Choisissez une autre date.</div>';return}
   const hrs=day===1?CONFIG.mon:CONFIG.other;
   if(chosen&&!hrs.includes(chosen))chosen=null;
   $("slots").innerHTML=hrs.map(h=>`<button type="button" class="slot ${chosen===h?"sel":""}" data-h="${h}" ${taken.includes(h)?"disabled":""}>${h}</button>`).join("");
@@ -432,6 +442,7 @@ async function loadSettings(){
       if(s.communes&&s.communes.length)COMMUNES.splice(0,COMMUNES.length,...s.communes);
       if(s.mon&&s.mon.length)CONFIG.mon=s.mon;
       if(s.other&&s.other.length)CONFIG.other=s.other;
+      if(Array.isArray(s.closed))CONFIG.closed=s.closed;
     }
   }catch(e){}
   renderPublic();fillEditor();draw();
@@ -441,12 +452,19 @@ function fillEditor(){
   $("s-com").value=COMMUNES.join("\n");
   $("s-mon").value=CONFIG.mon.join(",");
   $("s-other").value=CONFIG.other.join(",");
+  DRAFT=CONFIG.closed.slice();renderOff();
 }
+let DRAFT=[];
+function renderOff(){
+  $("s-offs").innerHTML=DRAFT.length?DRAFT.map(x=>`<span>${esc(x.split("-").reverse().join("/"))}<button type="button" data-rm="${esc(x)}">✕</button></span>`).join(""):'<span style="color:var(--mut)">Aucun jour off</span>';
+}
+$("s-add").onclick=()=>{const v=$("s-off").value;if(v&&!DRAFT.includes(v)){DRAFT.push(v);DRAFT.sort();renderOff()}$("s-off").value=""};
+$("s-offs").onclick=e=>{const b=e.target.closest("button");if(b){DRAFT=DRAFT.filter(x=>x!==b.dataset.rm);renderOff()}};
 const toList=v=>v.split(",").map(x=>x.trim()).filter(Boolean).sort();
 $("s-save").onclick=async()=>{
   const services=$("s-svc").value.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(a=>a.length>=4&&a[0]).map(a=>[a[0],a[1],Number(a[2]),Number(a[3])]);
   const communes=$("s-com").value.split("\n").map(x=>x.trim()).filter(Boolean);
-  const data={services,communes,mon:toList($("s-mon").value),other:toList($("s-other").value)};
+  const data={services,communes,mon:toList($("s-mon").value),other:toList($("s-other").value),closed:DRAFT.slice().sort()};
   const m=$("s-msg");m.classList.remove("hide");
   if(!services.length||!communes.length||!data.mon.length||!data.other.length){m.textContent="Vérifiez : prestations, communes et créneaux ne doivent pas être vides.";return}
   const r=await sb.from("settings").update({data}).eq("id",1).select();
