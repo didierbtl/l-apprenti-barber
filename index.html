@@ -231,9 +231,9 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 <section class="hero" id="top">
   <div class="wrap">
     <div>
-      <span class="eyebrow">Barber à domicile</span>
+      <span class="eyebrow" data-t="hero_eyebrow">Barber à domicile</span>
       <h1>L’Apprenti<em>Barber</em></h1>
-      <p class="lead">Coupe, barbe et sourcils par un barber qui se déplace chez vous. Du style, de la précision, sans prise de tête.</p>
+      <p class="lead" data-t="hero_lead">Coupe, barbe et sourcils par un barber qui se déplace chez vous. Du style, de la précision, sans prise de tête.</p>
       <div class="cta">
         <a class="btn" href="#reserver">Réserver maintenant</a>
         <a class="btn o" href="#prestations">Voir les prestations</a>
@@ -259,19 +259,19 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 
 <div class="strip">
   <div class="wrap">
-    <div class="i"><b>À domicile</b><small>Je viens chez vous</small></div>
-    <div class="i"><b>8 – 13 €</b><small>Tarifs clairs</small></div>
-    <div class="i"><b>7j / 7</b><small>Du lundi au dimanche</small></div>
-    <div class="i"><b>En ligne</b><small>Réservation instantanée</small></div>
+    <div class="i"><b data-t="st1">À domicile</b><small data-t="st1s">Je viens chez vous</small></div>
+    <div class="i"><b data-t="st2">8 – 13 €</b><small data-t="st2s">Tarifs clairs</small></div>
+    <div class="i"><b data-t="st3">7j / 7</b><small data-t="st3s">Du lundi au dimanche</small></div>
+    <div class="i"><b data-t="st4">En ligne</b><small data-t="st4s">Réservation instantanée</small></div>
   </div>
 </div>
 
 <section class="s" id="prestations">
   <div class="wrap">
     <div class="head">
-      <span class="eyebrow">Nos prestations</span>
+      <span class="eyebrow" data-t="pres_eb">Nos prestations</span>
       <h2>Le style qui <em>vous ressemble</em></h2>
-      <p class="lead">Des formules claires, des finitions nettes. Touchez une carte pour la sélectionner et réserver.</p>
+      <p class="lead" data-t="pres_lead">Des formules claires, des finitions nettes. Touchez une carte pour la sélectionner et réserver.</p>
     </div>
     <div id="list"></div>
   </div>
@@ -285,13 +285,13 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
       <div class="chips">
         <span class="f">Saint-Benoît</span><span>Bras-Panon</span><span>Sainte-Anne</span><span>Saint-André</span><span>Sainte-Suzanne</span>
       </div>
-      <div class="msg"><b>Frais de déplacement</b> de 4 à 8 € en dehors de Saint-Benoît. Aucun frais à Saint-Benoît.</div>
+      <div class="msg"><b data-t="fee_b">Frais de déplacement</b> <span data-t="fee">de 4 à 8 € en dehors de Saint-Benoît. Aucun frais à Saint-Benoît.</span></div>
     </div>
     <div class="hours">
       <h3>Horaires</h3>
-      <div><span>Lundi</span><b>8h – 17h</b></div>
-      <div><span>Mardi au dimanche</span><b>8h – 14h</b></div>
-      <div><span>Sur rendez-vous</span><b>À domicile</b></div>
+      <div><span data-t="h1l">Lundi</span><b data-t="h1v">8h – 17h</b></div>
+      <div><span data-t="h2l">Mardi au dimanche</span><b data-t="h2v">8h – 14h</b></div>
+      <div><span data-t="h3l">Sur rendez-vous</span><b data-t="h3v">À domicile</b></div>
     </div>
   </div>
 </section>
@@ -302,7 +302,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
       <div style="position:relative">
         <span class="eyebrow">Carte fidélité</span>
         <h2>10 coupes, la <em>11<sup style="font-size:.5em">e</sup> offerte</em></h2>
-        <p class="lead">Votre fidélité est récompensée. Après dix coupes payées, la suivante est offerte, puis le compteur repart.</p>
+        <p class="lead" data-t="loy_lead">Votre fidélité est récompensée. Après dix coupes payées, la suivante est offerte, puis le compteur repart.</p>
       </div>
       <div class="dots" style="position:relative;gap:10px;justify-content:center">
         <span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span>
@@ -317,7 +317,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
     <div class="head" style="text-align:center">
       <span class="eyebrow">Réservation</span>
       <h2>Réservez <em>en ligne</em></h2>
-      <p class="lead" style="margin-inline:auto">Choisissez votre prestation, votre créneau, et je viens chez vous.</p>
+      <p class="lead" style="margin-inline:auto" data-t="res_lead">Choisissez votre prestation, votre créneau, et je viens chez vous.</p>
     </div>
     <div class="form">
       <div class="grid2">
@@ -364,6 +364,13 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
         <div class="msg hide" id="s-msg"></div>
       </details>
 
+      <details class="set"><summary>✏️ Textes du site</summary>
+        <p class="hint">Modifie le texte voulu puis touche Enregistrer. Si tu vides une case, le texte d’origine revient.</p>
+        <div id="s-texts"></div>
+        <p><button class="btn sm" id="t-save">Enregistrer</button></p>
+        <div class="msg hide" id="t-msg"></div>
+      </details>
+
       <div id="bks"></div>
     </div>
   </div>
@@ -371,8 +378,8 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 
 <footer>
   <div class="fb">L’APPRENTI BARBER</div>
-  Barber à domicile · Lun 8h–17h · Mar–Dim 8h–14h<br>
-  <a class="wa" id="wa" href="#">Nous écrire sur WhatsApp</a><br>
+  <span data-t="foot">Barber à domicile · Lun 8h–17h · Mar–Dim 8h–14h</span><br>
+  <a class="wa" id="wa" href="#" data-t="wa_t">Nous écrire sur WhatsApp</a><br>
   <a href="#admin" id="adm">Admin</a>
 </footer>
 
@@ -386,7 +393,11 @@ const SERVICES=[["Coupe seule","Coupe propre et finitions nettes",8,30],["Coupe 
 const COMMUNES=["Saint-Benoît (sans frais)","Bras-Panon (+4 à 8 €)","Sainte-Anne (+4 à 8 €)","Saint-André (+4 à 8 €)","Sainte-Suzanne (+4 à 8 €)"];
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let chosen=null,taken=[];
+let chosen=null,taken=[],TEXTS={};
+const TX=[["hero_eyebrow","Accueil : accroche"],["hero_lead","Accueil : texte"],["st1","Bandeau 1 : titre"],["st1s","Bandeau 1 : sous-texte"],["st2","Bandeau 2 : titre"],["st2s","Bandeau 2 : sous-texte"],["st3","Bandeau 3 : titre"],["st3s","Bandeau 3 : sous-texte"],["st4","Bandeau 4 : titre"],["st4s","Bandeau 4 : sous-texte"],["pres_eb","Prestations : petit titre"],["pres_lead","Prestations : texte"],["fee_b","Frais : titre"],["fee","Frais : texte"],["h1l","Horaires ligne 1 : jour"],["h1v","Horaires ligne 1 : heures"],["h2l","Horaires ligne 2 : jour"],["h2v","Horaires ligne 2 : heures"],["h3l","Horaires ligne 3 : titre"],["h3v","Horaires ligne 3 : texte"],["loy_lead","Fidélité : texte"],["res_lead","Réservation : texte"],["wa_t","Lien WhatsApp"],["foot","Pied de page"]];
+const TXDEF={};
+document.querySelectorAll("[data-t]").forEach(e=>{TXDEF[e.dataset.t]=e.textContent});
+function applyTexts(){document.querySelectorAll("[data-t]").forEach(e=>{const k=e.dataset.t,v=TEXTS[k];e.textContent=(v!=null&&v!=="")?v:TXDEF[k]})}
 
 /* Affichage public : prestations, liste déroulante, communes */
 function renderPublic(){
@@ -443,9 +454,10 @@ async function loadSettings(){
       if(s.mon&&s.mon.length)CONFIG.mon=s.mon;
       if(s.other&&s.other.length)CONFIG.other=s.other;
       if(Array.isArray(s.closed))CONFIG.closed=s.closed;
+      if(s.texts&&typeof s.texts==='object')TEXTS=s.texts;
     }
   }catch(e){}
-  renderPublic();fillEditor();draw();
+  applyTexts();renderPublic();fillEditor();draw();
 }
 function fillEditor(){
   $("s-svc").value=SERVICES.map(s=>s.join(" | ")).join("\n");
@@ -453,6 +465,8 @@ function fillEditor(){
   $("s-mon").value=CONFIG.mon.join(",");
   $("s-other").value=CONFIG.other.join(",");
   DRAFT=CONFIG.closed.slice();renderOff();
+  $("s-texts").innerHTML=TX.map(a=>`<label>${esc(a[1])}</label><textarea data-k="${a[0]}" rows="2"></textarea>`).join("");
+  $("s-texts").querySelectorAll("textarea").forEach(a=>{a.value=TEXTS[a.dataset.k]||TXDEF[a.dataset.k]||""});
 }
 let DRAFT=[];
 function renderOff(){
@@ -461,16 +475,20 @@ function renderOff(){
 $("s-add").onclick=()=>{const v=$("s-off").value;if(v&&!DRAFT.includes(v)){DRAFT.push(v);DRAFT.sort();renderOff()}$("s-off").value=""};
 $("s-offs").onclick=e=>{const b=e.target.closest("button");if(b){DRAFT=DRAFT.filter(x=>x!==b.dataset.rm);renderOff()}};
 const toList=v=>v.split(",").map(x=>x.trim()).filter(Boolean).sort();
-$("s-save").onclick=async()=>{
+async function saveSettings(m){
   const services=$("s-svc").value.split("\n").map(l=>l.split("|").map(x=>x.trim())).filter(a=>a.length>=4&&a[0]).map(a=>[a[0],a[1],Number(a[2]),Number(a[3])]);
   const communes=$("s-com").value.split("\n").map(x=>x.trim()).filter(Boolean);
-  const data={services,communes,mon:toList($("s-mon").value),other:toList($("s-other").value),closed:DRAFT.slice().sort()};
-  const m=$("s-msg");m.classList.remove("hide");
+  const texts={};
+  $("s-texts").querySelectorAll("textarea").forEach(a=>{const v=a.value.trim(),k=a.dataset.k;if(v&&v!==TXDEF[k])texts[k]=v});
+  const data={services,communes,mon:toList($("s-mon").value),other:toList($("s-other").value),closed:DRAFT.slice().sort(),texts};
+  m.classList.remove("hide");
   if(!services.length||!communes.length||!data.mon.length||!data.other.length){m.textContent="Vérifiez : prestations, communes et créneaux ne doivent pas être vides.";return}
   const r=await sb.from("settings").update({data}).eq("id",1).select();
   if(r.error||!r.data||!r.data.length){m.textContent="Erreur d’enregistrement (table « settings » créée dans Supabase ?).";return}
   m.textContent="✓ Enregistré, le site est à jour.";loadSettings();
-};
+}
+$("s-save").onclick=()=>saveSettings($("s-msg"));
+$("t-save").onclick=()=>saveSettings($("t-msg"));
 
 /* Fidélité : 10 coupes payées, la 11e est offerte (le compteur repart ensuite).
    Calculé uniquement ici, dans l'espace admin, à partir du numéro de téléphone. */
