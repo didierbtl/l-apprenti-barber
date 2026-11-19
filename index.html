@@ -190,6 +190,16 @@ footer .fb{font-family:'Playfair Display',serif;font-size:22px;color:var(--tx);m
 footer a.wa{display:inline-block;margin:18px 0 10px;color:var(--gold2);font-weight:600;text-decoration:none;border-bottom:1px solid rgba(201,164,92,.5);padding-bottom:2px}
 footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 
+.rvs{display:grid;gap:14px;margin-bottom:30px}
+@media(min-width:760px){.rvs{grid-template-columns:repeat(3,1fr)}}
+.rv{background:linear-gradient(180deg,var(--card),#101d33);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.rv p{margin:10px 0 0;color:var(--tx);font-size:15px;overflow-wrap:anywhere}
+.rv small{display:block;margin-top:10px;color:var(--mut);font-size:12px}
+.stars{color:var(--gold2);letter-spacing:.12em;font-size:18px}
+.pick{display:flex;gap:6px}
+.pick button{background:none;border:0;font-size:36px;line-height:1;color:#d9d2bd;cursor:pointer;padding:2px}
+.pick button.on{color:#c9a45c}
+#avis .form .msg{background:#fbf6e8;border-color:#e6d6a6;color:var(--ink)}
 .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:inline-flex}
 @media(min-width:760px){.fab{display:none}}
 </style>
@@ -223,6 +233,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
       <li><a href="#prestations">Prestations</a></li>
       <li><a href="#zone">Zone &amp; horaires</a></li>
       <li><a href="#fidelite">Fidélité</a></li>
+      <li><a href="#avis">Avis</a></li>
     </ul>
     <a class="btn sm" href="#reserver">Réserver</a>
   </div>
@@ -312,6 +323,26 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
   </div>
 </section>
 
+<section class="s" id="avis">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Avis clients</span>
+      <h2>Ils m’ont <em>fait confiance</em></h2>
+      <p class="lead" id="rv-sum"></p>
+    </div>
+    <div class="rvs" id="rv-list"></div>
+    <div class="form">
+      <label style="margin-top:0">Votre note</label>
+      <div class="pick" id="rv-pick"></div>
+      <label for="rv-txt">Votre avis</label>
+      <textarea id="rv-txt" rows="4" maxlength="500" placeholder="Racontez votre expérience en quelques mots"></textarea>
+      <p style="margin:8px 0 0;font-size:13px;color:var(--ink2)">Avis anonyme : aucun nom n’est demandé.</p>
+      <p style="margin:18px 0 0"><button class="btn" id="rv-go" type="button">Envoyer mon avis</button></p>
+      <div class="msg hide" id="rv-msg"></div>
+    </div>
+  </div>
+</section>
+
 <section class="s" id="reserver">
   <div class="wrap">
     <div class="head" style="text-align:center">
@@ -362,6 +393,10 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
         <p class="hint">Touche ✕ pour retirer un jour. N’oublie pas d’appuyer sur Enregistrer.</p>
         <p><button class="btn sm" id="s-save">Enregistrer</button></p>
         <div class="msg hide" id="s-msg"></div>
+      </details>
+
+      <details class="set"><summary id="rv-sumy">⭐ Avis clients</summary>
+        <div id="rv-admin" style="margin-top:10px"></div>
       </details>
 
       <details class="set"><summary>✏️ Textes du site</summary>
@@ -441,6 +476,47 @@ $("go").onclick=async()=>{
     else{say("✓ Rendez-vous confirmé : "+s[0]+" le "+d.value+" à "+chosen+". À bientôt "+name+" !");chosen=null;loadTaken()}
   }catch(e){say("Réservation impossible pour le moment. Écrivez-nous sur WhatsApp.")}
   $("go").disabled=false;
+};
+
+/* Avis clients (anonymes, publiés après validation) */
+let RV=[],rate=0;
+const stars=n=>"★".repeat(n)+"☆".repeat(5-n);
+function renderReviews(){
+  const n=RV.length;
+  $("rv-sum").textContent=n?(RV.reduce((a,x)=>a+x.rating,0)/n).toFixed(1).replace(".",",")+" / 5 · "+n+" avis":"Soyez le premier à laisser un avis.";
+  $("rv-list").innerHTML=RV.slice(0,6).map(x=>`<div class="rv"><span class="stars">${stars(x.rating)}</span><p>${esc(x.comment)}</p><small>${new Date(x.created_at).toLocaleDateString("fr-FR",{month:"long",year:"numeric"})}</small></div>`).join("");
+}
+async function loadReviews(){
+  try{const r=await sb.from("reviews").select("rating,comment,created_at").eq("approved",true).order("created_at",{ascending:false}).limit(100);RV=r.data||[]}catch(e){RV=[]}
+  renderReviews();
+}
+function paintPick(){$("rv-pick").querySelectorAll("button").forEach(b=>b.classList.toggle("on",Number(b.dataset.n)<=rate))}
+$("rv-pick").innerHTML=[1,2,3,4,5].map(i=>`<button type="button" data-n="${i}" aria-label="${i} étoiles">★</button>`).join("");
+$("rv-pick").onclick=e=>{const b=e.target.closest("button");if(b){rate=Number(b.dataset.n);paintPick()}};
+$("rv-go").onclick=async()=>{
+  const c=$("rv-txt").value.trim(),m=$("rv-msg");m.classList.remove("hide");
+  if(!rate||c.length<3){m.textContent="Choisissez une note et écrivez quelques mots.";return}
+  try{const last=Number(localStorage.getItem("rvAt"));if(last&&Date.now()-last<864e5){m.textContent="Merci, vous avez déjà laissé un avis aujourd’hui.";return}}catch(e){}
+  $("rv-go").disabled=true;
+  const r=await sb.from("reviews").insert({rating:rate,comment:c.slice(0,500)});
+  $("rv-go").disabled=false;
+  if(r.error){m.textContent="Envoi impossible pour le moment. Réessayez plus tard.";return}
+  try{localStorage.setItem("rvAt",String(Date.now()))}catch(e){}
+  m.textContent="✓ Merci ! Votre avis sera publié après validation.";$("rv-txt").value="";rate=0;paintPick();
+};
+/* Avis : gestion dans l'admin */
+async function showReviews(){
+  const r=await sb.from("reviews").select("*").order("created_at",{ascending:false});
+  const rows=r.data||[],pend=rows.filter(x=>!x.approved).length;
+  $("rv-sumy").textContent="⭐ Avis clients"+(pend?" ("+pend+" à valider)":"");
+  $("rv-admin").innerHTML=rows.length?rows.map(x=>`<div class="bk"><div><span class="stars">${stars(x.rating)}</span> <small style="color:var(--mut)">${new Date(x.created_at).toLocaleDateString("fr-FR")} · ${x.approved?"publié":"à valider"}</small><p style="margin:8px 0 0">${esc(x.comment)}</p></div><div class="acts">${x.approved?`<button data-rvno="${x.id}">Retirer</button>`:`<button data-rvok="${x.id}">Publier</button>`}<button class="del" data-rvdel="${x.id}">Supprimer</button></div></div>`).join(""):'<p style="color:var(--mut);margin:0">Aucun avis pour le moment.</p>';
+}
+$("rv-admin").onclick=async e=>{
+  const b=e.target.closest("button");if(!b)return;const k=b.dataset;
+  if(k.rvok||k.rvno)await sb.from("reviews").update({approved:!!k.rvok}).eq("id",k.rvok||k.rvno);
+  else if(k.rvdel&&confirm("Supprimer cet avis ?"))await sb.from("reviews").delete().eq("id",k.rvdel);
+  else return;
+  showReviews();loadReviews();
 };
 
 /* Réglages modifiables depuis l'admin (table Supabase "settings") */
@@ -567,7 +643,7 @@ async function refreshAuth(){
   const {data}=await sb.auth.getSession();
   const on=!!data.session;
   $("login").classList.toggle("hide",on);$("panel").classList.toggle("hide",!on);
-  if(on)showBookings();
+  if(on){showBookings();showReviews()}
 }
 function openAdmin(){$("admin").classList.remove("hide");$("admin").scrollIntoView();refreshAuth()}
 $("adm").onclick=e=>{e.preventDefault();openAdmin()};
@@ -577,7 +653,7 @@ $("li").onclick=async()=>{
   if(r.error)alert("Email ou mot de passe incorrect.");else refreshAuth();
 };
 $("lo").onclick=async()=>{await sb.auth.signOut();editId=null;refreshAuth()};
-$("rf").onclick=showBookings;
+$("rf").onclick=()=>{showBookings();showReviews()};
 $("bks").onchange=e=>{
   if(e.target.classList.contains("e-date")){
     const box=e.target.closest(".ed"),sel=box.querySelector(".e-time");
@@ -591,7 +667,7 @@ $("bks").onclick=async e=>{
   if(b.dataset.save){b.disabled=true;await saveEdit(b.dataset.save,b.closest(".ed"));b.disabled=false;return}
   if(b.dataset.del&&confirm("Annuler ce rendez-vous ?")){await sb.from("bookings").delete().eq("id",b.dataset.del);editId=null;showBookings();loadTaken()}
 };
-loadSettings();loadTaken();
+loadSettings();loadTaken();loadReviews();
 </script>
 </body>
 </html>
