@@ -540,7 +540,7 @@ function draw(){
   if(CONFIG.closed.includes(ds)){chosen=null;$("slots").innerHTML='<div class="closed">Fermé ce jour-là. Choisissez une autre date.</div>';return}
   const wide=PROMO.wide.includes(ds),short=(ds>=PROMO.short[0]&&ds<=PROMO.short[1]);
   const hrs=wide?CONFIG.mon:short?CONFIG.other:(day===1?CONFIG.mon:CONFIG.other);
-  const need=Math.max(1,Math.ceil(mins(picks())/60));
+  const need=picks().length;
   const free=h=>{for(let i=0;i<need;i++){const x=addH(h,i);if(!hrs.includes(x)||taken.includes(x))return false}return true};
   if(chosen&&!free(chosen))chosen=null;
   $("slots").innerHTML=hrs.map(h=>`<button type="button" class="slot ${chosen===h?"sel":""}" data-h="${h}" ${free(h)?"":"disabled"}>${h}</button>`).join("");
@@ -554,7 +554,7 @@ $("more").onclick=e=>{const b=e.target.closest(".rm");if(b){b.closest("#more > d
 $("go").onclick=async()=>{
   const name=$("name").value.trim(),tel=$("tel").value.trim(),addr=$("addr").value.trim(),commune=$("com").value;
   if(!chosen||!name||!tel||!addr)return say("Choisissez une heure et remplissez nom, téléphone et adresse.");
-  const L=picks(),price=totalFor(L,d.value),need=Math.max(1,Math.ceil(mins(L)/60));
+  const L=picks(),price=totalFor(L,d.value),need=L.length;
   const label=L.length>1?"👥 "+L.length+" pers. : "+L.map(s=>s[0]).join(" & "):L[0][0];
   $("go").disabled=true;
   try{
