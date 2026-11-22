@@ -395,6 +395,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
       <label for="addr">Adresse du rendez-vous</label><input id="addr" autocomplete="street-address" placeholder="N°, rue, quartier">
       <label for="date">Date</label><input type="date" id="date">
       <label>Heure</label><div class="slots" id="slots"></div>
+      <div class="msg hide" id="hoursMsg"></div>
       <div class="grid2">
         <div><label for="name">Votre nom</label><input id="name" autocomplete="name" placeholder="Nom et prénom"></div>
         <div><label for="tel">Téléphone</label><input id="tel" type="tel" autocomplete="tel" placeholder="0692 00 00 00"></div>
@@ -537,9 +538,12 @@ async function loadTaken(){
 /* Créneaux : horaires normaux ou horaires spéciaux fêtes, selon la durée totale du groupe */
 function draw(){
   const ds=d.value,day=new Date(ds+"T12:00").getDay();
+  $("hoursMsg").classList.add("hide");
   if(CONFIG.closed.includes(ds)){chosen=null;$("slots").innerHTML='<div class="closed">Fermé ce jour-là. Choisissez une autre date.</div>';return}
   const wide=PROMO.wide.includes(ds),short=(ds>=PROMO.short[0]&&ds<=PROMO.short[1]);
   const hrs=wide?CONFIG.mon:short?CONFIG.other:(day===1?CONFIG.mon:CONFIG.other);
+  const hm=$("hoursMsg"),hh=h=>Number(h.slice(0,2))+"h";
+  if(wide||short){hm.innerHTML="🎄 Horaires spéciaux fêtes ce jour-là : <b>"+hh(hrs[0])+" – "+hh(addH(hrs[hrs.length-1],1))+"</b>";hm.classList.remove("hide")}
   const need=picks().length;
   const free=h=>{for(let i=0;i<need;i++){const x=addH(h,i);if(!hrs.includes(x)||taken.includes(x))return false}return true};
   if(chosen&&!free(chosen))chosen=null;
@@ -701,7 +705,8 @@ function editForm(x){
 function renderBookings(rows){
   $("bks").innerHTML=rows.length?rows.map(x=>{
     const ed=String(x.id)===String(editId);
-    return `<div class="bk"><div><b>${x.slot_date} · ${hhmm(x.slot_time)}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}${ed?editForm(x):""}</div><div class="acts"><button data-edit="${esc(x.id)}">${ed?"Modification…":"Modifier"}</button><button class="del" data-del="${esc(x.id)}">Annuler</button></div></div>`;
+    const sl=[hhmm(x.slot_time)].concat(BLK.filter(y=>y.tel===x.tel&&y.slot_date===x.slot_date).map(y=>hhmm(y.slot_time))).sort();
+    return `<div class="bk"><div><b>${x.slot_date} · ${hhmm(x.slot_time)}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}${sl.length>1?`<br>🕐 <b>${sl.length} créneaux réservés : ${sl.join(" · ")}</b>`:""}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}${ed?editForm(x):""}</div><div class="acts"><button data-edit="${esc(x.id)}">${ed?"Modification…":"Modifier"}</button><button class="del" data-del="${esc(x.id)}">Annuler</button></div></div>`;
   }).join(""):'<p style="color:var(--mut)">Aucun rendez-vous pour le moment.</p>';
 }
 let ROWS=[],BLK=[];
