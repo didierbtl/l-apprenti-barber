@@ -167,6 +167,8 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--gold);backg
 .bk .acts button{background:none;border:1px solid rgba(255,255,255,.2);color:var(--mut);border-radius:999px;padding:8px 14px;cursor:pointer;font-family:inherit}
 .bk .acts button:hover{border-color:var(--gold);color:var(--gold2)}
 .bk .acts button.del:hover{border-color:#e07a7a;color:#e07a7a}
+.bk .acts a.rt{text-align:center;text-decoration:none;border:1px solid rgba(255,255,255,.2);color:var(--gold2);border-radius:999px;padding:8px 14px;font-size:14px}
+.bk .acts button.on{background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600}
 .ed{margin-top:14px;padding-top:6px;border-top:1px solid var(--line)}
 .ed label{margin:14px 0 6px;font-size:12px}
 .ed .btn{width:auto;margin:0}
@@ -276,7 +278,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
     <span>3 coupes <b>19 €</b><s>24 €</s></span>
     <span>Pack complet <b>11 €</b><s>13 €</s></span>
   </div>
-  <small>Coiffage et cire inclus · déplacement gratuit à Saint-Benoît · 5 à 8 € hors secteur</small>
+  <small>Coiffage et cire inclus · déplacement gratuit à Saint-Benoît · 6 à 10 € hors secteur</small>
 </div>
 <script>if(new Date()>=new Date("2027-01-02T00:00:00")){var o=document.getElementById("ofx");if(o)o.remove()}</script>
 
@@ -337,7 +339,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
       <div class="chips">
         <span class="f">Saint-Benoît</span><span>Bras-Panon</span><span>Sainte-Anne</span><span>Saint-André</span><span>Sainte-Suzanne</span>
       </div>
-      <div class="msg"><b data-t="fee_b">Frais de déplacement</b> <span data-t="fee">de 5 à 8 € en dehors de Saint-Benoît. Aucun frais à Saint-Benoît.</span></div>
+      <div class="msg"><b data-t="fee_b">Frais de déplacement</b> <span data-t="fee">Saint-Benoît : gratuit · Bras-Panon : 6 € · Sainte-Anne : 7 € · Saint-André : 8 € · Sainte-Suzanne : 10 €.</span></div>
     </div>
     <div class="hours">
       <h3>Horaires</h3>
@@ -482,6 +484,13 @@ const sb=supabase.createClient("https://qhnekdidxanugehrcvim.supabase.co","sb_pu
 const SERVICES=[["Coupe seule","Coupe propre et finitions nettes",8,30],["Coupe + barbe","Coupe et taille de barbe",12,45],["Coupe + barbe + sourcils","Le combo complet",13,50]];
 const COMMUNES=["Saint-Benoît (sans frais)","Bras-Panon (+5 à 8 €)","Sainte-Anne (+5 à 8 €)","Saint-André (+5 à 8 €)","Sainte-Suzanne (+5 à 8 €)"];
 
+/* ===== FRAIS DE DÉPLACEMENT : modifie ici les tarifs par commune ===== */
+const FEES={"Saint-Benoît":0,"Bras-Panon":6,"Sainte-Anne":7,"Saint-André":8,"Sainte-Suzanne":10};
+const townOf=c=>String(c).replace(/\s*\(.*\)/,"").trim();
+const feeOf=c=>FEES[townOf(c)]||0;
+const comLabel=c=>townOf(c)+(feeOf(c)?" (+"+feeOf(c)+" €)":" (sans frais)");
+const val=x=>x._n%11===0?feeOf(x.commune):(Number(x.price)||0); /* montant réellement encaissé (coupe offerte = déplacement seul) */
+
 /* ===== OFFRE DES FÊTES : modifie uniquement ce bloc l'année prochaine ===== */
 const PROMO={
   from:"2026-12-15",to:"2027-01-01",       /* période du tarif spécial (selon la date du rendez-vous) */
@@ -514,9 +523,9 @@ function totalFor(L,ds){
   return t+(solo?(solo<=3?PROMO.bundle[solo-1]:PROMO.bundle[2]+PROMO.extra*(solo-3)):0);
 }
 function refreshPromo(){
-  const L=picks(),t=totalFor(L,d.value),norm=L.reduce((a,s)=>a+s[2],0),promo=isPromo(d.value)&&t<norm,m=$("promoMsg");
-  m.innerHTML=(promo?"🎄 Tarif spécial fêtes : <b>"+t+" €</b> <s>"+norm+" €</s>":"Total : <b>"+t+" €</b>")+" · durée environ "+mins(L)+" min";
-  m.classList.toggle("hide",L.length<2&&!promo);
+  const L=picks(),fee=feeOf($("com").value),t=totalFor(L,d.value)+fee,norm=L.reduce((a,s)=>a+s[2],0)+fee,promo=isPromo(d.value)&&t<norm,m=$("promoMsg");
+  m.innerHTML=(promo?"🎄 Tarif spécial fêtes : <b>"+t+" €</b> <s>"+norm+" €</s>":"Total : <b>"+t+" €</b>")+(fee?" (dont déplacement "+fee+" €)":" (déplacement offert)")+" · durée environ "+mins(L)+" min";
+  m.classList.remove("hide");
 }
 function upd(){refreshPromo();draw()}
 function addPerson(){
@@ -531,9 +540,9 @@ function renderPublic(){
   const keep=$("svc").value,keepC=$("com").value;
   $("list").innerHTML=SERVICES.map((s,i)=>`<div class="row" data-i="${i}"><span class="n">0${i+1}</span><b>${esc(s[0])}</b><small>${esc(s[1])}</small><span class="dur">⏱ ${s[3]} min</span><div class="price">${s[2]}<sup>€</sup></div><span class="go">Réserver →</span></div>`).join("");
   $("svc").innerHTML=opts();
-  $("com").innerHTML=COMMUNES.map(c=>`<option>${esc(c)}</option>`).join("");
+  $("com").innerHTML=COMMUNES.map(c=>`<option>${esc(comLabel(c))}</option>`).join("");
   if(keep&&SERVICES[keep])$("svc").value=keep;
-  if(COMMUNES.includes(keepC))$("com").value=keepC;
+  if(COMMUNES.map(comLabel).includes(keepC))$("com").value=keepC;
   document.querySelectorAll("#more .psv").forEach(s=>{const v=s.value;s.innerHTML=opts();if(SERVICES[v])s.value=v});
 }
 $("list").onclick=e=>{const r=e.target.closest(".row");if(r){$("svc").value=r.dataset.i;upd();$("reserver").scrollIntoView({behavior:"smooth"})}};
@@ -565,13 +574,14 @@ function draw(){
 $("slots").onclick=e=>{const h=e.target.dataset.h;if(h){chosen=h;draw()}};
 d.onchange=()=>{chosen=null;loadTaken();refreshPromo()};
 $("svc").onchange=upd;
+$("com").onchange=upd;
 $("addP").onclick=addPerson;
 $("more").onchange=upd;
 $("more").onclick=e=>{const b=e.target.closest(".rm");if(b){b.closest("#more > div").remove();[...$("more").children].forEach((w,i)=>w.querySelector("label").textContent="Personne "+(i+2)+" · Prestation");upd()}};
 $("go").onclick=async()=>{
   const name=$("name").value.trim(),tel=$("tel").value.trim(),addr=$("addr").value.trim(),commune=$("com").value;
   if(!chosen||!name||!tel||!addr)return say("Choisissez une heure et remplissez nom, téléphone et adresse.");
-  const L=picks(),price=totalFor(L,d.value),need=L.length;
+  const L=picks(),price=totalFor(L,d.value)+feeOf(commune),need=L.length;
   const label=L.length>1?"👥 "+L.length+" pers. : "+L.map(s=>s[0]).join(" & "):L[0][0];
   $("go").disabled=true;
   try{
@@ -580,7 +590,9 @@ $("go").onclick=async()=>{
     if(r.data===false){await loadTaken();say("Ce créneau vient d’être pris, choisissez-en un autre.")}
     else{
       for(let i=1;i<need;i++)await sb.rpc("book",{p_date:d.value,p_time:addH(chosen,i),p_name:name,p_tel:tel,p_commune:commune,p_addr:addr,p_service:"↳ suite du rendez-vous",p_price:0});
-      say("✓ Rendez-vous confirmé : "+label+" ("+price+" €) le "+d.value+" à "+chosen+". À bientôt "+name+" !");chosen=null;loadTaken();
+      {const f=new Date(d.value+"T12:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"}),town=townOf(commune),fee=feeOf(commune),e=$("msg");
+      e.innerHTML="<b>✓ Rendez-vous confirmé !</b><br>📅 "+esc(f)+" à "+chosen+"<br>✂️ "+esc(label)+"<br>💶 Total : <b>"+price+" €</b>"+(fee?" (dont déplacement "+fee+" €)":" (déplacement offert)")+"<br>📍 "+esc(addr)+", "+esc(town)+"<br>⏱ Durée environ "+mins(L)+" min<br>À bientôt "+esc(name)+" !";e.classList.remove("hide")}
+      chosen=null;loadTaken();
     }
   }catch(e){say("Réservation impossible pour le moment. Écrivez-nous sur WhatsApp.")}
   $("go").disabled=false;
@@ -675,15 +687,15 @@ $("s-save").onclick=()=>saveSettings($("s-msg"));
 $("t-save").onclick=()=>saveSettings($("t-msg"));
 
 /* Fidélité : 10 coupes payées, la 11e est offerte (le compteur repart ensuite).
-   Calculé uniquement ici, dans l'espace admin, à partir du numéro de téléphone. */
+   Le déplacement reste à payer. Calculé uniquement ici, dans l'espace admin, à partir du numéro de téléphone. */
 const normTel=t=>{let n=String(t).replace(/\D/g,"");if(n.startsWith("0"))n="262"+n.slice(1);return n};
 function loyalty(x){
   const p=x._n%11,free=p===0,filled=free?10:p;
   const dots=Array.from({length:10},(_,i)=>`<span class="dot ${i<filled?"on":""}"></span>`).join("");
   let h=`<div class="loy"><b>Carte fidélité · coupe n°${x._n}</b><div class="dots">${dots}</div>`;
-  h+=free?`<span class="gift">🎁 Cette coupe est OFFERTE</span>`:`${p}/10 · ${p===10?"la prochaine est offerte 🎁":(10-p)+" avant la coupe offerte"}`;
+  h+=free?`<span class="gift">🎁 Coupe OFFERTE · déplacement à payer : ${feeOf(x.commune)} €</span>`:`${p}/10 · ${p===10?"la prochaine est offerte 🎁":(10-p)+" avant la coupe offerte"}`;
   if(p===10){
-    const txt=encodeURIComponent(`Bonjour ${x.name}, merci pour votre fidélité chez L’APPRENTI BARBER ! Vous avez fait 10 coupes : votre 11ème est OFFERTE 🎁. Réservez quand vous voulez, je me déplace chez vous.`);
+    const txt=encodeURIComponent(`Bonjour ${x.name}, merci pour votre fidélité chez L’APPRENTI BARBER ! Vous avez fait 10 coupes : votre 11ème coupe est OFFERTE 🎁 (déplacement non compris). Réservez quand vous voulez, je me déplace chez vous.`);
     h+=`<div class="send"><a href="sms:+${x._k}?body=${txt}">📱 Envoyer le SMS</a><a href="https://wa.me/${x._k}?text=${txt}" target="_blank" rel="noopener">💬 WhatsApp</a></div>`;
   }
   return h+"</div>";
@@ -703,7 +715,8 @@ function timeOpts(ds,cur){
 function editForm(x){
   const cur=hhmm(x.slot_time);
   const sv=SERVICES.map((s,i)=>opt(i,s[0]+" – "+s[2]+"€",s[0]===x.service)).join("");
-  const cmList=COMMUNES.includes(x.commune)?COMMUNES:[x.commune].concat(COMMUNES);
+  const labels=COMMUNES.map(comLabel);
+  const cmList=labels.includes(x.commune)?labels:[x.commune].concat(labels);
   const cm=cmList.map(c=>opt(c,c,c===x.commune)).join("");
   return `<div class="ed"><label>Date</label><input type="date" class="e-date" value="${esc(x.slot_date)}">
   <label>Heure</label><select class="e-time">${timeOpts(x.slot_date,cur)}</select>
@@ -726,7 +739,7 @@ function dayLabel(ds){
 function bkCard(x){
   const ed=String(x.id)===String(editId);
   const sl=[hhmm(x.slot_time)].concat(BLK.filter(y=>y.tel===x.tel&&y.slot_date===x.slot_date).map(y=>hhmm(y.slot_time))).sort();
-  return `<div class="bk"><div><b>${x.slot_date} · ${hhmm(x.slot_time)}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}${sl.length>1?`<br>🕐 <b>${sl.length} créneaux réservés : ${sl.join(" · ")}</b>`:""}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}${ed?editForm(x):""}</div><div class="acts"><button data-edit="${esc(x.id)}">${ed?"Modification…":"Modifier"}</button><button class="del" data-del="${esc(x.id)}">Annuler</button></div></div>`;
+  return `<div class="bk"><div><b>${x.slot_date} · ${hhmm(x.slot_time)}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte · à payer "+val(x)+"€":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}${sl.length>1?`<br>🕐 <b>${sl.length} créneaux réservés : ${sl.join(" · ")}</b>`:""}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}${ed?editForm(x):""}</div><div class="acts"><a class="rt" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(x.addr+", "+townOf(x.commune)+", La Réunion")}">🧭 Itinéraire</a><button class="${x.done?"on":""}" data-done="${esc(x.id)}">${x.done?"✓ Terminé":"Terminé ?"}</button><button class="${x.paid?"on":""}" data-paid="${esc(x.id)}">${x.paid?"✓ Payé":"Payé ?"}</button><button data-edit="${esc(x.id)}">${ed?"Modification…":"Modifier"}</button><button class="del" data-del="${esc(x.id)}">Annuler</button></div></div>`;
 }
 function renderBookings(rows){
   const td=iso(new Date());
@@ -745,7 +758,7 @@ function renderBookings(rows){
     if(x.slot_date!==cur){
       cur=x.slot_date;
       const g=r.filter(y=>y.slot_date===cur);
-      const tot=g.reduce((a,y)=>a+(y._n%11===0?0:Number(y.price)||0),0);
+      const tot=g.reduce((a,y)=>a+val(y),0);
       h+=`<div class="dayh">${esc(dayLabel(cur))}<small>${g.length} rdv · ${tot} €</small></div>`;
     }
     h+=bkCard(x);
@@ -764,21 +777,20 @@ async function showBookings(){
   if(!window._tabSet){window._tabSet=1;if(!rows.some(x=>x.slot_date===iso(new Date())))TAB="up"}
   renderBookings(rows);renderStats();
 }
-/* Statistiques (calculées à partir des rendez-vous passés ; les coupes offertes comptent 0 €) */
+/* Statistiques (uniquement les rendez-vous marqués « Terminé » ; coupe offerte = déplacement seul) */
 function renderStats(){
   const box=$("st-body");
   if(!ROWS.length){box.innerHTML='<p class="stl">Pas encore de rendez-vous.</p>';return}
   const n=new Date(),today=iso(n),cm=today.slice(0,7),lm=iso(new Date(n.getFullYear(),n.getMonth()-1,1)).slice(0,7);
-  const val=x=>x._n%11===0?0:(Number(x.price)||0);
   const sum=a=>a.reduce((t,x)=>t+val(x),0);
-  const done=ROWS.filter(x=>x.slot_date<=today),up=ROWS.filter(x=>x.slot_date>today);
+  const done=ROWS.filter(x=>x.done),up=ROWS.filter(x=>x.slot_date>today);
   const m1=done.filter(x=>x.slot_date.startsWith(cm)),m0=done.filter(x=>x.slot_date.startsWith(lm));
-  const paid=done.filter(x=>val(x)>0),free=done.length-paid.length;
+  const paid=done.filter(x=>x._n%11!==0),free=done.length-paid.length;
   const avg=paid.length?(sum(done)/paid.length).toFixed(1).replace(".",","):"0";
   const pl=(k,w)=>k+" "+w+(k>1?"s":"");
   const top=f=>{const c={};ROWS.forEach(x=>{const k=f(x);c[k]=(c[k]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])[0]};
   const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
-  const dj=top(x=>new Date(x.slot_date+"T12:00").getDay()),sv=top(x=>x.service),cm2=top(x=>x.commune);
+  const dj=top(x=>new Date(x.slot_date+"T12:00").getDay()),sv=top(x=>x.service),cm2=top(x=>townOf(x.commune));
   const cl={};ROWS.forEach(x=>{const c=cl[x._k]||(cl[x._k]={name:x.name,n:0});c.n++;c.name=x.name});
   const best=Object.values(cl).sort((a,b)=>b.n-a.n).slice(0,3);
   const card=(l,b,sub)=>`<div class="stc"><small>${l}</small><b>${b}</b><span>${sub}</span></div>`;
@@ -807,7 +819,7 @@ async function saveEdit(id,box){
   if(c.error)return say2("Vérification impossible, réessayez.");
   if((c.data||[]).some(x=>String(x.id)!==String(id)))return say2("Ce créneau est déjà pris par un autre rendez-vous.");
   const grp=old&&String(old.service).startsWith("👥");
-  const upd2=grp?{slot_date:date,slot_time:time,name,tel,commune,addr}:{slot_date:date,slot_time:time,name,tel,commune,addr,service:s[0],price:(old&&old.service===s[0])?old.price:s[2]};
+  const upd2=grp?{slot_date:date,slot_time:time,name,tel,commune,addr}:{slot_date:date,slot_time:time,name,tel,commune,addr,service:s[0],price:(old&&old.service===s[0])?old.price:s[2]+feeOf(commune)};
   const r=await sb.from("bookings").update(upd2).eq("id",id).select();
   if(r.error)return say2("Erreur : "+r.error.message);
   if(!r.data||!r.data.length)return say2("Modification refusée : il manque l’autorisation « update » dans Supabase.");
@@ -837,6 +849,13 @@ $("bks").onchange=e=>{
 };
 $("bks").onclick=async e=>{
   const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.done||b.dataset.paid){
+    const k=b.dataset.done?"done":"paid",id=b.dataset.done||b.dataset.paid,m=ROWS.find(x=>String(x.id)===id);if(!m)return;
+    const on=!m[k],up=on&&k==="paid"?{paid:true,done:true}:{[k]:on};
+    const r=await sb.from("bookings").update(up).eq("id",id).select();
+    if(r.error||!r.data||!r.data.length){alert("Erreur : vérifie les colonnes done/paid et l’autorisation update dans Supabase.");return}
+    Object.assign(m,up);renderBookings(ROWS);renderStats();return;
+  }
   if(b.dataset.edit){editId=String(editId)===b.dataset.edit?null:b.dataset.edit;renderBookings(ROWS);return}
   if(b.dataset.close){editId=null;renderBookings(ROWS);return}
   if(b.dataset.save){b.disabled=true;await saveEdit(b.dataset.save,b.closest(".ed"));b.disabled=false;return}
