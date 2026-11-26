@@ -180,6 +180,13 @@ input:focus,select:focus,textarea:focus{outline:0;border-color:var(--gold);backg
 .send{display:flex;gap:14px;margin-top:14px;flex-wrap:wrap;align-items:center}
 .send a{color:var(--gold2)}
 
+/* Onglets & jours (liste des rendez-vous admin) */
+.tabs{display:flex;gap:8px;margin:0 0 18px;overflow-x:auto}
+.tabs button{flex:none;background:none;border:1px solid rgba(255,255,255,.2);color:var(--mut);border-radius:999px;padding:10px 18px;font-family:inherit;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--gold);color:var(--ink);border-color:var(--gold);font-weight:600}
+.dayh{font-family:'Playfair Display',serif;color:var(--gold2);font-size:20px;margin:22px 0 10px}
+.dayh small{font-family:Inter,sans-serif;color:var(--mut);font-size:13px;margin-left:10px}
+
 /* Éditeur planning & offres */
 .set{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 18px 20px;margin-bottom:20px}
 .set summary{cursor:pointer;font-weight:600;color:var(--gold2);padding:14px 0;list-style:none}
@@ -448,6 +455,12 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
         <div class="msg hide" id="t-msg"></div>
       </details>
 
+      <div class="tabs" id="tabs">
+        <button data-tab="today" class="on">Aujourd’hui</button>
+        <button data-tab="up">À venir</button>
+        <button data-tab="past">Passés</button>
+        <button data-tab="all">Tous</button>
+      </div>
       <div id="bks"></div>
     </div>
   </div>
@@ -702,13 +715,45 @@ function editForm(x){
   <div class="send"><button class="btn sm" data-save="${esc(x.id)}">Enregistrer</button><button class="btn o sm" data-close="1">Fermer</button></div>
   <div class="msg hide e-msg"></div></div>`;
 }
-function renderBookings(rows){
-  $("bks").innerHTML=rows.length?rows.map(x=>{
-    const ed=String(x.id)===String(editId);
-    const sl=[hhmm(x.slot_time)].concat(BLK.filter(y=>y.tel===x.tel&&y.slot_date===x.slot_date).map(y=>hhmm(y.slot_time))).sort();
-    return `<div class="bk"><div><b>${x.slot_date} · ${hhmm(x.slot_time)}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}${sl.length>1?`<br>🕐 <b>${sl.length} créneaux réservés : ${sl.join(" · ")}</b>`:""}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}${ed?editForm(x):""}</div><div class="acts"><button data-edit="${esc(x.id)}">${ed?"Modification…":"Modifier"}</button><button class="del" data-del="${esc(x.id)}">Annuler</button></div></div>`;
-  }).join(""):'<p style="color:var(--mut)">Aucun rendez-vous pour le moment.</p>';
+
+/* Liste des rendez-vous : onglets (Aujourd'hui / À venir / Passés / Tous) + regroupement par jour */
+let TAB="today";
+function dayLabel(ds){
+  const td=iso(new Date()),tm=iso(new Date(Date.now()+864e5));
+  const l=new Date(ds+"T12:00").toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
+  return ds===td?"Aujourd’hui":ds===tm?"Demain":l.charAt(0).toUpperCase()+l.slice(1);
 }
+function bkCard(x){
+  const ed=String(x.id)===String(editId);
+  const sl=[hhmm(x.slot_time)].concat(BLK.filter(y=>y.tel===x.tel&&y.slot_date===x.slot_date).map(y=>hhmm(y.slot_time))).sort();
+  return `<div class="bk"><div><b>${x.slot_date} · ${hhmm(x.slot_time)}</b><br>${esc(x.name)} · ${esc(x.service)} (${x._n%11===0?"offerte":x.price+"€"})<br>📍 ${esc(x.addr)}, ${esc(x.commune)}${sl.length>1?`<br>🕐 <b>${sl.length} créneaux réservés : ${sl.join(" · ")}</b>`:""}<br><a href="tel:${esc(x.tel)}">${esc(x.tel)}</a>${loyalty(x)}${ed?editForm(x):""}</div><div class="acts"><button data-edit="${esc(x.id)}">${ed?"Modification…":"Modifier"}</button><button class="del" data-del="${esc(x.id)}">Annuler</button></div></div>`;
+}
+function renderBookings(rows){
+  const td=iso(new Date());
+  const f=(k,x)=>k==="today"?x.slot_date===td:k==="up"?x.slot_date>td:k==="past"?x.slot_date<td:true;
+  const names={today:"Aujourd’hui",up:"À venir",past:"Passés",all:"Tous"};
+  document.querySelectorAll("#tabs button").forEach(b=>{
+    const k=b.dataset.tab;
+    b.classList.toggle("on",k===TAB);
+    b.textContent=names[k]+" ("+rows.filter(x=>f(k,x)).length+")";
+  });
+  let r=rows.filter(x=>f(TAB,x));
+  if(TAB==="past")r=r.slice().reverse();
+  if(!r.length){$("bks").innerHTML='<p style="color:var(--mut)">Aucun rendez-vous ici.</p>';return}
+  let h="",cur="";
+  r.forEach(x=>{
+    if(x.slot_date!==cur){
+      cur=x.slot_date;
+      const g=r.filter(y=>y.slot_date===cur);
+      const tot=g.reduce((a,y)=>a+(y._n%11===0?0:Number(y.price)||0),0);
+      h+=`<div class="dayh">${esc(dayLabel(cur))}<small>${g.length} rdv · ${tot} €</small></div>`;
+    }
+    h+=bkCard(x);
+  });
+  $("bks").innerHTML=h;
+}
+$("tabs").onclick=e=>{const b=e.target.closest("button");if(b){TAB=b.dataset.tab;editId=null;renderBookings(ROWS)}};
+
 let ROWS=[],BLK=[];
 async function showBookings(){
   const r=await sb.from("bookings").select("*").order("slot_date").order("slot_time");
@@ -716,6 +761,7 @@ async function showBookings(){
   BLK=all.filter(x=>String(x.service).startsWith("↳"));
   rows.forEach(x=>{x._k=normTel(x.tel);cnt[x._k]=(cnt[x._k]||0)+1;x._n=cnt[x._k]});
   ROWS=rows;
+  if(!window._tabSet){window._tabSet=1;if(!rows.some(x=>x.slot_date===iso(new Date())))TAB="up"}
   renderBookings(rows);renderStats();
 }
 /* Statistiques (calculées à partir des rendez-vous passés ; les coupes offertes comptent 0 €) */
