@@ -482,12 +482,13 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 const CONFIG={whatsapp:"262693946880",mon:["08:00","09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00"],other:["08:00","09:00","10:00","11:00","12:00","13:00","14:00"],closed:[]};
 const sb=supabase.createClient("https://qhnekdidxanugehrcvim.supabase.co","sb_publishable_0KbtD8bo-k15AZ50LcduCQ_8QFHyLXX");
 const SERVICES=[["Coupe seule","Coupe propre et finitions nettes",8,30],["Coupe + barbe","Coupe et taille de barbe",12,45],["Coupe + barbe + sourcils","Le combo complet",13,50]];
-const COMMUNES=["Saint-Benoît (sans frais)","Bras-Panon (+5 à 8 €)","Sainte-Anne (+5 à 8 €)","Saint-André (+5 à 8 €)","Sainte-Suzanne (+5 à 8 €)"];
+const COMMUNES=["Saint-Benoît (sans frais)","Bras-Panon (6 €)","Sainte-Anne (7 €)","Saint-André (8 €)","Sainte-Suzanne (10 €)"];
 
 /* ===== FRAIS DE DÉPLACEMENT : modifie ici les tarifs par commune ===== */
 const FEES={"Saint-Benoît":0,"Bras-Panon":6,"Sainte-Anne":7,"Saint-André":8,"Sainte-Suzanne":10};
 const townOf=c=>String(c).replace(/\s*\(.*\)/,"").trim();
-const feeOf=c=>FEES[townOf(c)]||0;
+const feeKey=c=>townOf(c).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g,"").replace("SAINTE","SAINT");
+const feeOf=c=>{const p=(String(c).match(/\(([^)]*)\)/)||[])[1]||"";if(/sans frais|gratuit/i.test(p))return 0;const m=p.match(/^\s*\+?\s*(\d+(?:[.,]\d+)?)\s*€?\s*$/);if(m)return Number(m[1].replace(",","."));const k=Object.keys(FEES).find(n=>feeKey(n)===feeKey(c));return k?FEES[k]:0};
 const comLabel=c=>townOf(c)+(feeOf(c)?" (+"+feeOf(c)+" €)":" (sans frais)");
 const val=x=>x._n%11===0?feeOf(x.commune):(Number(x.price)||0); /* montant réellement encaissé (coupe offerte = déplacement seul) */
 
