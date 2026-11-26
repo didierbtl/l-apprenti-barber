@@ -224,6 +224,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
 .stl b{color:var(--tx)}
 .fab{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;display:inline-flex}
 @media(min-width:760px){.fab{display:none}}
+#manage .set{margin:10px 0 0;padding:10px 12px}
 </style>
 </head>
 <body>
@@ -423,6 +424,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
     <div id="panel" class="hide">
       <p style="margin:0 0 20px;display:flex;gap:10px;flex-wrap:wrap"><button class="btn o sm" id="lo">Déconnexion</button> <button class="btn o sm" id="rf">Actualiser</button></p>
 
+      <details class="set" id="manage"><summary>⚙️ Gérer le site</summary>
       <details class="set"><summary>⚙️ Planning &amp; offres</summary>
         <label>Prestations (une par ligne)</label>
         <textarea id="s-svc" rows="5"></textarea>
@@ -455,6 +457,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
         <div id="s-texts"></div>
         <p><button class="btn sm" id="t-save">Enregistrer</button></p>
         <div class="msg hide" id="t-msg"></div>
+      </details>
       </details>
 
       <div class="tabs" id="tabs">
