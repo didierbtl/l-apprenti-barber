@@ -475,7 +475,7 @@ footer #adm{color:#5d6c85;font-size:12px;text-decoration:none}
   <div class="fb">L’APPRENTI BARBER</div>
   <span data-t="foot">Barber à domicile · Lun 8h–17h · Mar–Dim 8h–14h</span><br>
   <a class="wa" id="wa" href="#" data-t="wa_t">Nous écrire sur WhatsApp</a><br>
-  <a href="#admin" id="adm">Admin</a>
+  <a href="#admin" id="adm" class="hide">Admin</a>
 </footer>
 
 <a class="btn fab" href="#reserver">Réserver</a>
@@ -838,7 +838,9 @@ async function refreshAuth(){
 }
 function openAdmin(){$("admin").classList.remove("hide");$("admin").scrollIntoView();refreshAuth()}
 $("adm").onclick=e=>{e.preventDefault();openAdmin()};
+window.addEventListener("hashchange",()=>{if(location.hash==="#admin")openAdmin()});
 if(location.hash==="#admin")openAdmin();
+sb.auth.onAuthStateChange((event,session)=>{$("adm").classList.toggle("hide",!session)});
 $("li").onclick=async()=>{
   const r=await sb.auth.signInWithPassword({email:$("em").value.trim(),password:$("pw").value});
   if(r.error)alert("Email ou mot de passe incorrect.");else refreshAuth();
